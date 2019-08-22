@@ -5,7 +5,6 @@ import os
 
 import myfilemanager as mfm
 import myfilemanager_sixtracklib as mfm_stl
-import mystyle as ms
 from TricubicInterpolation import cTricubic as ti
 
 import PyPIC.PyPIC_Scatter_Gather as PyPICSC
@@ -82,11 +81,12 @@ def get_slice(picoutside, picinside, fname, islice):
 
 #ob = mfm.myloadmat_to_obj('pinch_cut.mat')
 
-if not os.path.exists('temp'):
-    os.mkdir('temp')
-fname = 'pinch_pic_data_mean2.mat'
+temp_folder = 'temp1'
+if not os.path.exists(temp_folder):
+    os.mkdir(temp_folder)
+fname = 'eclouds/pinch1.mat'
 N_nodes_discard = 10
-magnify = 4.
+magnify = 2.
 compression_opts = 0
 pic_out, pic_in, zg = setup_pic(fname, magnify=magnify, N_nodes_discard=N_nodes_discard)
 
@@ -113,7 +113,6 @@ slices[0,:,:] = get_slice(pic_out, pic_in, fname, 1)
 slices[1,:,:] = get_slice(pic_out, pic_in, fname, 2)
 slices[2,:,:] = get_slice(pic_out, pic_in, fname, 3)
 for k in range(1,n_slices-3):
-    break
     z0_in = zg[k] 
     print('Slice {}/{}'.format(k+2, n_slices-4))
     slices[3] = get_slice(pic_out, pic_in, fname, k+3)
@@ -140,7 +139,7 @@ for k in range(1,n_slices-3):
             phi_slice_exact[ii,jj,7] = tinterp.ddxdydz( z0_in + dz, pic_out.xg[i], pic_out.yg[j])
 
     #sio.savemat('temp/slice%d.mat'%k, {'phi_slice_exact' : phi_slice_exact}, oned_as = 'row')
-    mfm_stl.dict_to_h5({'phi_slice_exact' : phi_slice_exact}, 'temp/slice%d.h5'%k, compression_opts=compression_opts)
+    mfm_stl.dict_to_h5({'phi_slice_exact' : phi_slice_exact}, temp_folder+'/slice%d.h5'%k, compression_opts=compression_opts)
 
     slices[0, :, :] = slices[1, :, :]
     slices[1, :, :] = slices[2, :, :]
@@ -157,7 +156,7 @@ del slices
 phi_e = np.zeros([n_slices-4, nx, ny, 8])
 for i in range(1,n_slices-3):
     print('Reading Slice: %d'%i)
-    ob = mfm_stl.h5_to_dict('temp/slice%d.h5'%i)
+    ob = mfm_stl.h5_to_dict(temp_folder+'/slice%d.h5'%i)
     phi_e[i-1,:,:,:] = ob['phi_slice_exact'][:,:,:]
     #ob = mfm.myloadmat_to_obj('temp/slice%d.mat'%i)
     #phi_e[i-1,:,:,:] = ob.phi_slice_exact[:,:,:]
@@ -170,4 +169,4 @@ dd = {'xg' : xg_e,
      }
 
 print('Begin saving..')
-mfm_stl.dict_to_h5(dd, 'refined_exact_pinch_mag%.1f.h5'%magnify, compression_opts=compression_opts)
+mfm_stl.dict_to_h5(dd, 'eclouds/refined_pinch1_mag%.1f.h5'%magnify, compression_opts=compression_opts)
