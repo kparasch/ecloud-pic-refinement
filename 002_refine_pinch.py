@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as sio
 import os
+import time
+import shutil
 
 import myfilemanager as mfm
 import myfilemanager_sixtracklib as mfm_stl
@@ -80,13 +82,17 @@ def get_slice(picoutside, picinside, fname, islice):
     return phi_refined.reshape(picinside.Nxg, picinside.Nyg)
 
 #ob = mfm.myloadmat_to_obj('pinch_cut.mat')
+start_time = time.time()
+N_nodes_discard = 10
+magnify = 6.
 
-temp_folder = 'temp1'
+pinch_in = 'pinch_pic_data_mean2'
+fname = 'eclouds/' + pinch_in + '.mat'
+pinch_out = 'refined_'+pinch_in+'_mag%.1f.h5'%magnify
+temp_folder = pinch_out+'.temp'
 if not os.path.exists(temp_folder):
     os.mkdir(temp_folder)
-fname = 'eclouds/pinch1.mat'
-N_nodes_discard = 10
-magnify = 2.
+
 compression_opts = 0
 pic_out, pic_in, zg = setup_pic(fname, magnify=magnify, N_nodes_discard=N_nodes_discard)
 
@@ -169,4 +175,8 @@ dd = {'xg' : xg_e,
      }
 
 print('Begin saving..')
-mfm_stl.dict_to_h5(dd, 'eclouds/refined_pinch1_mag%.1f.h5'%magnify, compression_opts=compression_opts)
+mfm_stl.dict_to_h5(dd, 'eclouds/'+pinch_out, compression_opts=compression_opts)
+end_time = time.time()
+shutil.rmtree(temp_folder)
+print('Running time: %f mins'%((end_time-start_time)/60.))
+
